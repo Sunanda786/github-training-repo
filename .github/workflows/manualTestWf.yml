@@ -23,27 +23,20 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-    - name: deploy test app in azure vm
-      run: echo "deployment about to start"
-    - name: deploy app in azure
-      uses: ilCollez/ssh-scp-deploy@main
-      with: 
-          host: ${{ secrets.SSH_HOST }} # "example.com"
-          port: ${{ secrets.SSH_PORT }} # 22
-          username: ${{ secrets.SSH_USER }} # "user"
-          key: ${{ secrets.SSH_KEY }} # "~/.ssh/id_rsa", can also be the key itself
-  #  passphrase: ${{ secrets.SSH_PASSPHRASE }} # "passphrase"
-          files: |
-              index.html
-          remote-path: "/var/www/html"
-          clean: true
-          before-upload: |
-            echo "Executed before upload"
-
-            pm2 stop service
-          after-upload: |
-             echo "Executed after upload"
-
-             npm ci --production
-             npm run build
-             npm test
+    - name: Checkout the Code
+      uses: actions/chjeckout@v3
+    
+    - name: Present Working Directory
+      run:  pwd
+    
+    - name: Copy the index.html to ubunto server
+      uses: marcodallasanta/ssh-scp-deploy@v1.2.0
+      with:
+        local: 'index.html'
+        remote: '~/index.html'
+        host: ${{secrets.HOST}}
+        user: ${{secrets.USER}}
+        key: ${{secrets.key}}
+        pre_upload: sudo rm -rf /var/www/html/index.html
+        post_upload: sudo mv ~/index.html /var/www/html/index.html
+        ssh_options: -o StrictHostKeyChecking=no
